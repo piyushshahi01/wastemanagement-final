@@ -30,7 +30,7 @@ export default function Register() {
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.message || 'Registration failed');
+                throw new Error(data.msg || data.message || 'Registration failed');
             }
 
             // Save token and navigate
