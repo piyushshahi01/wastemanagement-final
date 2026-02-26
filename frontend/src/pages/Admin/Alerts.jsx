@@ -10,7 +10,7 @@ export default function AdminAlerts() {
 
     useEffect(() => {
         const fetchAlerts = () => {
-            fetch("http://localhost:5000/api/bins")
+            fetch("https://wastemanagement-final-2.onrender.com/api/bins")
                 .then(res => res.json())
                 .then(data => {
                     const filtered = data
@@ -42,7 +42,7 @@ export default function AdminAlerts() {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/alerts', newAlert, {
+            await axios.post('https://wastemanagement-final-2.onrender.com/api/alerts', newAlert, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setIsPublishModalOpen(false);

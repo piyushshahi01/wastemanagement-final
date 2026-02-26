@@ -23,7 +23,7 @@ export default function Login() {
                 ? { email, password, passkey }
                 : { email, password };
 
-            const res = await axios.post('http://localhost:5000/api/auth/login', payload);
+            const res = await axios.post('https://wastemanagement-final-2.onrender.com/api/auth/login', payload);
             const { token, role, user } = res.data;
 
             localStorage.setItem('token', token);

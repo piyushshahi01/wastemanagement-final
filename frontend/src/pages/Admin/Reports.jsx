@@ -11,7 +11,7 @@ export default function Reports() {
         try {
             const token = localStorage.getItem('token');
             // Fetch live data to generate the report
-            const { data } = await axios.get('http://localhost:5000/api/bins', {
+            const { data } = await axios.get('https://wastemanagement-final-2.onrender.com/api/bins', {
                 headers: { Authorization: token }
             });
 

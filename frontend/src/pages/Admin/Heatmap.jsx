@@ -10,7 +10,7 @@ export default function Heatmap() {
 
     useEffect(() => {
         const fetchBins = () => {
-            fetch("http://localhost:5000/api/bins", {
+            fetch("https://wastemanagement-final-2.onrender.com/api/bins", {
                 headers: {
                     'Authorization': localStorage.getItem('token')
                 }

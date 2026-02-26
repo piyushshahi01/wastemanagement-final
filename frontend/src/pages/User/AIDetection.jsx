@@ -19,7 +19,7 @@ export default function AIDetection() {
     useEffect(() => {
         const fetchCenters = async () => {
             try {
-                const res = await axios.get("http://localhost:5000/api/centers");
+                const res = await axios.get("https://wastemanagement-final-2.onrender.com/api/centers");
                 setCenters(res.data.filter(c => c.status === 'Active'));
             } catch (err) {
                 console.error("Failed to fetch centers:", err);
@@ -45,7 +45,7 @@ export default function AIDetection() {
                 date: new Date().toISOString()
             };
 
-            await axios.post("http://localhost:5000/api/waste", payload, {
+            await axios.post("https://wastemanagement-final-2.onrender.com/api/waste", payload, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -89,7 +89,7 @@ export default function AIDetection() {
         setResult(null);
         setAnalyzing(true);
         try {
-            const response = await fetch("http://localhost:5000/api/ai/detect", {
+            const response = await fetch("https://wastemanagement-final-2.onrender.com/api/ai/detect", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ image: base64data })

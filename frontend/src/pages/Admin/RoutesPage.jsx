@@ -15,8 +15,8 @@ export default function RoutesPage() {
     const fetchData = async () => {
         try {
             const [pickupRes, colRes] = await Promise.all([
-                axios.get('http://localhost:5000/api/pickups', { headers: { Authorization: token } }),
-                axios.get('http://localhost:5000/api/auth/collectors')
+                axios.get('https://wastemanagement-final-2.onrender.com/api/pickups', { headers: { Authorization: token } }),
+                axios.get('https://wastemanagement-final-2.onrender.com/api/auth/collectors')
             ]);
             setPickups(pickupRes.data);
             setCollectors(colRes.data);
@@ -35,7 +35,7 @@ export default function RoutesPage() {
         if (!selectedPickup || !selectedCollectorId) return;
 
         try {
-            await axios.put(`http://localhost:5000/api/pickups/${selectedPickup._id}/assign`,
+            await axios.put(`https://wastemanagement-final-2.onrender.com/api/pickups/${selectedPickup._id}/assign`,
                 { collectorId: selectedCollectorId },
                 { headers: { Authorization: token } }
             );

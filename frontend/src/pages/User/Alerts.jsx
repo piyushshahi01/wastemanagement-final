@@ -10,7 +10,7 @@ export default function () {
     useEffect(() => {
         const fetchAlerts = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/alerts');
+                const res = await axios.get('https://wastemanagement-final-2.onrender.com/api/alerts');
                 setAlerts(res.data);
             } catch (err) {
                 console.error("Failed to fetch alerts:", err);

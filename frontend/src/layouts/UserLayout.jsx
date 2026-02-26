@@ -25,7 +25,7 @@ export default function UserLayout() {
 
     useEffect(() => {
         if (token) {
-            axios.get('http://localhost:5000/api/auth/me', {
+            axios.get('https://wastemanagement-final-2.onrender.com/api/auth/me', {
                 headers: { Authorization: token }
             }).then(res => {
                 const pts = res.data.ecoPoints || 0;

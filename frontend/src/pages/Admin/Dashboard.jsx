@@ -16,9 +16,9 @@ export default function AdminDashboard() {
         const fetchData = async () => {
             try {
                 const [weeklyRes, monthlyRes, binsRes] = await Promise.all([
-                    axios.get('http://localhost:5000/api/analytics/weekly'),
-                    axios.get('http://localhost:5000/api/analytics/monthly'),
-                    axios.get('http://localhost:5000/api/bins')
+                    axios.get('https://wastemanagement-final-2.onrender.com/api/analytics/weekly'),
+                    axios.get('https://wastemanagement-final-2.onrender.com/api/analytics/monthly'),
+                    axios.get('https://wastemanagement-final-2.onrender.com/api/bins')
                 ]);
 
                 // Map data to readable labels
@@ -47,7 +47,7 @@ export default function AdminDashboard() {
 
         // Also setup interval for bins specifically if we want live updates
         const interval = setInterval(() => {
-            axios.get('http://localhost:5000/api/bins').then(res => setBins(res.data)).catch(console.error);
+            axios.get('https://wastemanagement-final-2.onrender.com/api/bins').then(res => setBins(res.data)).catch(console.error);
         }, 5000);
         return () => clearInterval(interval);
     }, []);

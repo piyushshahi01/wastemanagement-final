@@ -22,8 +22,8 @@ export default function Profile() {
         const fetchUserData = async () => {
             try {
                 const [wasteRes, meRes] = await Promise.all([
-                    axios.get('http://localhost:5000/api/waste', { headers: { Authorization: token } }),
-                    axios.get('http://localhost:5000/api/auth/me', { headers: { Authorization: token } })
+                    axios.get('https://wastemanagement-final-2.onrender.com/api/waste', { headers: { Authorization: token } }),
+                    axios.get('https://wastemanagement-final-2.onrender.com/api/auth/me', { headers: { Authorization: token } })
                 ]);
 
                 const logs = wasteRes.data.reverse();

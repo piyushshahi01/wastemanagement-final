@@ -22,7 +22,7 @@ export default function Rewards() {
 
     const fetchPoints = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/auth/me', {
+            const res = await axios.get('https://wastemanagement-final-2.onrender.com/api/auth/me', {
                 headers: { Authorization: token }
             });
             setUserPoints(res.data.ecoPoints || 0);

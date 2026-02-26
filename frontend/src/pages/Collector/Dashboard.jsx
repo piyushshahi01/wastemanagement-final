@@ -49,7 +49,7 @@ export default function CollectorDashboard() {
 
     const fetchPickups = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/pickups', {
+            const res = await axios.get('https://wastemanagement-final-2.onrender.com/api/pickups', {
                 headers: { Authorization: token }
             });
             // Split into assigned manifest vs globally available pending pool
@@ -70,7 +70,7 @@ export default function CollectorDashboard() {
 
     const handleComplete = async (id) => {
         try {
-            await axios.put(`http://localhost:5000/api/pickups/${id}/complete`, {}, {
+            await axios.put(`https://wastemanagement-final-2.onrender.com/api/pickups/${id}/complete`, {}, {
                 headers: { Authorization: token }
             });
             fetchPickups();
@@ -81,7 +81,7 @@ export default function CollectorDashboard() {
 
     const handleAccept = async (id) => {
         try {
-            await axios.put(`http://localhost:5000/api/pickups/${id}/assign`, {}, {
+            await axios.put(`https://wastemanagement-final-2.onrender.com/api/pickups/${id}/assign`, {}, {
                 headers: { Authorization: token }
             });
             fetchPickups();
@@ -94,7 +94,7 @@ export default function CollectorDashboard() {
     const handleNotify = async (id) => {
         setNotifyingMap(prev => ({ ...prev, [id]: true }));
         try {
-            await axios.post(`http://localhost:5000/api/pickups/${id}/notify`, {}, {
+            await axios.post(`https://wastemanagement-final-2.onrender.com/api/pickups/${id}/notify`, {}, {
                 headers: { Authorization: token }
             });
             alert("User has been notified successfully!");

@@ -43,7 +43,7 @@ export default function ManageCenters() {
 
     const fetchCenters = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/centers');
+            const res = await axios.get('https://wastemanagement-final-2.onrender.com/api/centers');
             setCenters(res.data);
         } catch (err) {
             console.error("Failed to fetch centers", err);
@@ -56,7 +56,7 @@ export default function ManageCenters() {
         if (!window.confirm("Are you sure you want to delete this center?")) return;
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:5000/api/centers/${id}`, {
+            await axios.delete(`https://wastemanagement-final-2.onrender.com/api/centers/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchCenters();
@@ -85,9 +85,9 @@ export default function ManageCenters() {
             const payload = { ...formData, lat: parseFloat(formData.lat), lng: parseFloat(formData.lng) };
 
             if (editingCenter) {
-                await axios.put(`http://localhost:5000/api/centers/${editingCenter._id}`, payload, config);
+                await axios.put(`https://wastemanagement-final-2.onrender.com/api/centers/${editingCenter._id}`, payload, config);
             } else {
-                await axios.post('http://localhost:5000/api/centers', payload, config);
+                await axios.post('https://wastemanagement-final-2.onrender.com/api/centers', payload, config);
             }
             setIsModalOpen(false);
             fetchCenters();

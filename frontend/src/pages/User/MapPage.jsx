@@ -48,7 +48,7 @@ export default function MapPage() {
 
         // 2. Fetch Bin Data
         const fetchBins = () => {
-            fetch("http://localhost:5000/api/bins")
+            fetch("https://wastemanagement-final-2.onrender.com/api/bins")
                 .then(res => res.json())
                 .then(data => setBins(data))
                 .catch(console.error);
@@ -57,7 +57,7 @@ export default function MapPage() {
         // 3. Fetch Centers Data
         const fetchCenters = async () => {
             try {
-                const res = await axios.get("http://localhost:5000/api/centers");
+                const res = await axios.get("https://wastemanagement-final-2.onrender.com/api/centers");
                 setCenters(res.data);
             } catch (err) {
                 console.error(err);

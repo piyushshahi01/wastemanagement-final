@@ -22,7 +22,7 @@ export default function Pickup() {
 
     const fetchPickups = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/pickups', {
+            const res = await axios.get('https://wastemanagement-final-2.onrender.com/api/pickups', {
                 headers: { Authorization: token }
             });
             setPickups(res.data);
@@ -60,7 +60,7 @@ export default function Pickup() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:5000/api/pickups', formData, {
+            await axios.post('https://wastemanagement-final-2.onrender.com/api/pickups', formData, {
                 headers: { Authorization: token }
             });
 
@@ -122,7 +122,7 @@ export default function Pickup() {
         if (!window.confirm("Are you sure you want to cancel this pickup request?")) return;
 
         try {
-            await axios.delete(`http://localhost:5000/api/pickups/${id}`, {
+            await axios.delete(`https://wastemanagement-final-2.onrender.com/api/pickups/${id}`, {
                 headers: { Authorization: token }
             });
             fetchPickups(); // Refresh the list

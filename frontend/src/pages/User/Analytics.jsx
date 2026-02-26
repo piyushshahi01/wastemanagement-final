@@ -106,7 +106,7 @@ export default function Analytics() {
         const fetchAnalyticsData = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const res = await axios.get('http://localhost:5000/api/waste', {
+                const res = await axios.get('https://wastemanagement-final-2.onrender.com/api/waste', {
                     headers: { Authorization: token }
                 });
 

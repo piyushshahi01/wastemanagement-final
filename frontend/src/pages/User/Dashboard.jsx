@@ -29,7 +29,7 @@ export default function UserDashboard() {
 
     const fetchWasteData = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/waste', {
+            const res = await axios.get('https://wastemanagement-final-2.onrender.com/api/waste', {
                 headers: { Authorization: token }
             });
             setWasteData(res.data.reverse());
@@ -50,7 +50,7 @@ export default function UserDashboard() {
         setMessage({ text: '', type: '' });
 
         try {
-            await axios.post('http://localhost:5000/api/waste',
+            await axios.post('https://wastemanagement-final-2.onrender.com/api/waste',
                 { type: formData.type, quantity: Number(formData.quantity) },
                 { headers: { Authorization: token } }
             );

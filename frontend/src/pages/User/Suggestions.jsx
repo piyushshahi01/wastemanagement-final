@@ -26,10 +26,10 @@ export default function Suggestions() {
         try {
             const token = localStorage.getItem('token');
             const [suggestionsRes, wasteRes] = await Promise.all([
-                axios.get('http://localhost:5000/api/ai/suggestions', {
+                axios.get('https://wastemanagement-final-2.onrender.com/api/ai/suggestions', {
                     headers: { Authorization: `Bearer ${token}` }
                 }),
-                axios.get('http://localhost:5000/api/waste', {
+                axios.get('https://wastemanagement-final-2.onrender.com/api/waste', {
                     headers: { Authorization: `Bearer ${token}` }
                 })
             ]);

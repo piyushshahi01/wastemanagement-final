@@ -87,7 +87,7 @@ export default function Topbar() {
 
             // Send subscription to backend
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/notifications/subscribe', subscription, {
+            await axios.post('https://wastemanagement-final-2.onrender.com/api/notifications/subscribe', subscription, {
                 headers: { Authorization: token }
             });
 

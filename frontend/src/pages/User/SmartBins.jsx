@@ -8,7 +8,7 @@ export default function SmartBins() {
 
     useEffect(() => {
         const fetchBins = () => {
-            fetch("http://localhost:5000/api/bins")
+            fetch("https://wastemanagement-final-2.onrender.com/api/bins")
                 .then(res => res.json())
                 .then(data => setBins(data))
                 .catch(err => console.error(err));
