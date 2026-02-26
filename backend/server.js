@@ -15,6 +15,20 @@ app.use(express.json());
 connectDB();
 
 // routes
+app.get("/", (req, res) => {
+    res.send("Server is running");
+});
+
+app.post("/api/iot-data", async (req, res) => {
+    try {
+        console.log(req.body);
+
+        res.status(200).json({ message: "Data received" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/waste", require("./routes/wasteRoutes"));
 app.use("/api/analytics", require("./routes/analyticsRoutes"));
