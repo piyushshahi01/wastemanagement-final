@@ -15,74 +15,21 @@ const POINT_MULTIPLIERS = {
 };
 
 // add waste
-router.post("/", auth, async (req, res) => {
+router.post("/", async (req, res) => {
     try {
-        const { type, quantity } = req.body;
-        const user = await User.findById(req.user.id);
+        console.log("BODY:", req.body);
 
-        if (!user) return res.status(404).json({ error: "User not found" });
+        const { distance, temp, gas } = req.body;
 
-        // Calculate dynamic eco-points
-        let multiplier = POINT_MULTIPLIERS[type.toLowerCase()] || 0;
-
-        // --- Streak Calculation Game Loop --- //
-        const now = new Date();
-        const lastLog = user.lastLogDate ? new Date(user.lastLogDate) : null;
-        let newStreak = user.currentStreak || 0;
-        let isStreakBonus = false;
-
-        if (lastLog) {
-            // Normalize dates to midnight for day comparison
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const lastLogDay = new Date(lastLog.getFullYear(), lastLog.getMonth(), lastLog.getDate());
-
-            const diffTime = Math.abs(today - lastLogDay);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-            if (diffDays === 1) {
-                // Logged yesterday, streak continues!
-                newStreak += 1;
-            } else if (diffDays === 0) {
-                // Already logged today, streak stays the same, no penalty
-            } else {
-                // Missed a day or more, streak resets
-                newStreak = 1;
-            }
-        } else {
-            newStreak = 1; // First log ever
+        if (!distance || !temp || !gas) {
+            return res.status(400).json({ message: "Missing data" });
         }
 
-        // Apply a massive 1.5x multiplier if they are on a 3+ day streak
-        if (newStreak >= 3) {
-            multiplier = multiplier * 1.5;
-            isStreakBonus = true;
-        }
+        res.json({ success: true, data: req.body });
 
-        const earnedPoints = Math.round(multiplier * quantity);
-
-        // Save waste log with points
-        const waste = new Waste({
-            ...req.body,
-            userId: req.user.id,
-            points: earnedPoints
-        });
-        await waste.save();
-
-        // Update User's total eco points, streak, and last log date
-        user.ecoPoints += earnedPoints;
-        user.currentStreak = newStreak;
-        user.lastLogDate = now;
-        await user.save();
-
-        res.json({
-            waste,
-            streak: newStreak,
-            isStreakBonus,
-            earnedPoints
-        });
-    } catch (error) {
-        console.error("Error logging waste:", error);
-        res.status(500).json({ error: "Failed to log waste" });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: "Server error" });
     }
 });
 
