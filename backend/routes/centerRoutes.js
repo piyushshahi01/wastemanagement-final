@@ -17,4 +17,26 @@ router.get("/", async (req, res) => {
     res.json(centers);
 });
 
+// edit center (admin only)
+router.put("/:id", auth, admin, async (req, res) => {
+    try {
+        const center = await Center.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!center) return res.status(404).json({ message: "Center not found" });
+        res.json(center);
+    } catch (err) {
+        res.status(500).json({ message: "Server Error" });
+    }
+});
+
+// delete center (admin only)
+router.delete("/:id", auth, admin, async (req, res) => {
+    try {
+        const center = await Center.findByIdAndDelete(req.params.id);
+        if (!center) return res.status(404).json({ message: "Center not found" });
+        res.json({ message: "Center removed" });
+    } catch (err) {
+        res.status(500).json({ message: "Server Error" });
+    }
+});
+
 module.exports = router;

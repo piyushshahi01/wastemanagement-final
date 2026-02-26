@@ -1,139 +1,156 @@
+import { useState, useEffect } from 'react';
 import {
-    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-    AreaChart, Area
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    LineChart, Line
 } from 'recharts';
-import { Users, Trash2, MapPin, AlertTriangle } from 'lucide-react';
-import AnimatedPage from '../../components/AnimatedPage';
-import { motion } from 'framer-motion';
+import axios from 'axios';
+import { Trash2, TrendingUp, AlertTriangle } from 'lucide-react';
 
-const containerVariants = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.1 } }
-};
+export default function AdminDashboard() {
+    const [weeklyData, setWeeklyData] = useState([]);
+    const [monthlyData, setMonthlyData] = useState([]);
+    const [bins, setBins] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
-};
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [weeklyRes, monthlyRes, binsRes] = await Promise.all([
+                    axios.get('http://localhost:5000/api/analytics/weekly'),
+                    axios.get('http://localhost:5000/api/analytics/monthly'),
+                    axios.get('http://localhost:5000/api/bins')
+                ]);
 
-const collectionData = [
-    { name: 'Mon', amount: 1200 },
-    { name: 'Tue', amount: 1350 },
-    { name: 'Wed', amount: 1100 },
-    { name: 'Thu', amount: 1500 },
-    { name: 'Fri', amount: 1800 },
-    { name: 'Sat', amount: 2100 },
-    { name: 'Sun', amount: 1900 },
-];
+                // Map data to readable labels
+                const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const mappedWeekly = weeklyRes.data.map(d => ({
+                    name: days[d._id - 1] || 'Unknown',
+                    waste: d.total
+                }));
+                setWeeklyData(mappedWeekly);
 
-export default function Dashboard() {
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const mappedMonthly = monthlyRes.data.map(d => ({
+                    name: months[d._id - 1] || 'Unknown',
+                    waste: d.total
+                }));
+                setMonthlyData(mappedMonthly);
+                setBins(binsRes.data);
+
+            } catch (error) {
+                console.error("Failed to fetch analytics or bins:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+
+        // Also setup interval for bins specifically if we want live updates
+        const interval = setInterval(() => {
+            axios.get('http://localhost:5000/api/bins').then(res => setBins(res.data)).catch(console.error);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const totalBins = bins.length;
+    const fullBins = bins.filter(b => b.fillLevel > 80).length;
+    const dangerBins = bins.filter(b => b.status !== "Normal").length;
+
     return (
-        <AnimatedPage className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Admin Overview 📊</h1>
-                <p className="text-gray-500 dark:text-gray-400 mt-1">System-wide metrics and smart city performance.</p>
+        <div className="p-8 space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-cyan-400">
+                Command Center Overview
+            </h1>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="bg-white/5 border border-white/10 p-6 rounded-2xl backdrop-blur-xl hover:bg-white/10 transition-colors shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+                    <div className="flex items-center gap-4 text-cyan-400 mb-2">
+                        <Trash2 className="w-6 h-6" />
+                        <h3 className="font-semibold text-gray-300">Total Waste Logged</h3>
+                    </div>
+                    <p className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-white to-gray-500 text-shadow-sm">
+                        {weeklyData.reduce((acc, curr) => acc + curr.waste, 0)} kg
+                    </p>
+                    <p className="text-sm text-gray-400 mt-2">This week</p>
+                </div>
+
+                <div className="bg-blue-500/10 border border-blue-500/20 p-6 rounded-2xl backdrop-blur-xl hover:bg-blue-500/20 transition-colors shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+                    <div className="flex items-center gap-4 text-blue-400 mb-2">
+                        <Trash2 className="w-6 h-6" />
+                        <h3 className="font-semibold text-gray-300">Total Bins</h3>
+                    </div>
+                    <p className="text-4xl font-bold text-white text-shadow-sm">
+                        {totalBins}
+                    </p>
+                    <p className="text-sm text-blue-300 mt-2">Active units</p>
+                </div>
+
+                <div className="bg-purple-500/10 border border-purple-500/20 p-6 rounded-2xl backdrop-blur-xl hover:bg-purple-500/20 transition-colors shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+                    <div className="flex items-center gap-4 text-purple-400 mb-2">
+                        <TrendingUp className="w-6 h-6" />
+                        <h3 className="font-semibold text-gray-300">Full Bins</h3>
+                    </div>
+                    <p className="text-4xl font-bold text-white text-shadow-sm">
+                        {fullBins}
+                    </p>
+                    <p className="text-sm text-purple-300 mt-2">&gt;80% Capacity</p>
+                </div>
+
+                <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-2xl backdrop-blur-xl hover:bg-red-500/20 transition-colors shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+                    <div className="flex items-center gap-4 text-red-500 mb-2">
+                        <AlertTriangle className="w-6 h-6" />
+                        <h3 className="font-semibold text-gray-300">Alerts</h3>
+                    </div>
+                    <p className="text-4xl font-bold text-white text-shadow-sm">
+                        {dangerBins}
+                    </p>
+                    <p className="text-sm text-red-400 mt-2">Requires attention</p>
+                </div>
             </div>
 
-            <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <motion.div variants={itemVariants} className="glass-card flex items-center justify-between p-6">
-                    <div>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Users</p>
-                        <p className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 mt-2">12,450</p>
-                    </div>
-                    <div className="w-14 h-14 bg-blue-100/50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center backdrop-blur-md shadow-inner">
-                        <Users className="w-7 h-7" />
-                    </div>
-                </motion.div>
-
-                <motion.div variants={itemVariants} className="glass-card flex items-center justify-between p-6">
-                    <div>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Waste (Week)</p>
-                        <p className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 mt-2">10.9 <span className="text-lg font-normal text-gray-400">Tons</span></p>
-                    </div>
-                    <div className="w-14 h-14 bg-purple-100/50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-2xl flex items-center justify-center backdrop-blur-md shadow-inner">
-                        <Trash2 className="w-7 h-7" />
-                    </div>
-                </motion.div>
-
-                <motion.div variants={itemVariants} className="glass-card flex items-center justify-between p-6">
-                    <div>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Smart Bins</p>
-                        <p className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 mt-2">342<span className="text-lg font-normal text-gray-400">/350</span></p>
-                    </div>
-                    <div className="w-14 h-14 bg-green-100/50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-2xl flex items-center justify-center backdrop-blur-md shadow-inner">
-                        <MapPin className="w-7 h-7" />
-                    </div>
-                </motion.div>
-
-                <motion.div variants={itemVariants} className="glass-card flex items-center justify-between p-6 relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-red-400/10 dark:bg-red-500/10 transition-colors group-hover:bg-red-400/20 dark:group-hover:bg-red-500/20 backdrop-blur-xl"></div>
-                    <div className="relative z-10 w-full flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-red-600 dark:text-red-400">Active Alerts</p>
-                            <p className="text-4xl font-extrabold text-red-700 dark:text-red-300 mt-1 tracking-tight">14</p>
-                        </div>
-                        <div className="w-14 h-14 bg-red-100/80 dark:bg-red-900/50 text-red-600 dark:text-red-400 rounded-2xl flex items-center justify-center shadow-inner border border-red-200/50 dark:border-red-800/50 ring-4 ring-red-50 dark:ring-red-950">
-                            <AlertTriangle className="w-7 h-7 animate-pulse" />
+            {loading ? (
+                <div className="flex justify-center py-20 text-gray-500">Loading graphs...</div>
+            ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Weekly Graph */}
+                    <div className="bg-white/5 border border-white/10 p-6 rounded-2xl backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+                        <h3 className="text-xl font-semibold mb-6 text-gray-200">Weekly Collection</h3>
+                        <div className="h-[300px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={weeklyData}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                                    <XAxis dataKey="name" stroke="#888" tickLine={false} />
+                                    <YAxis stroke="#888" tickLine={false} axisLine={false} />
+                                    <Tooltip
+                                        cursor={{ fill: '#ffffff05' }}
+                                        contentStyle={{ backgroundColor: 'rgba(10, 10, 15, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff', backdropFilter: 'blur(12px)' }}
+                                    />
+                                    <Bar dataKey="waste" fill="#06B6D4" radius={[4, 4, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
                         </div>
                     </div>
-                </motion.div>
-            </motion.div>
 
-            <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <motion.div variants={itemVariants} className="glass-panel p-6 rounded-2xl lg:col-span-2 hover:shadow-xl transition-all duration-300">
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                        <span className="w-2 h-6 rounded bg-green-500"></span> Daily Waste Collection (kg)
-                    </h2>
-                    <div className="h-72">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={collectionData}>
-                                <defs>
-                                    <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#22C55E" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF' }} />
-                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF' }} />
-                                <Tooltip
-                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                />
-                                <Area type="monotone" dataKey="amount" stroke="#22C55E" strokeWidth={3} fillOpacity={1} fill="url(#colorAmount)" />
-                            </AreaChart>
-                        </ResponsiveContainer>
+                    {/* Monthly Graph */}
+                    <div className="bg-white/5 border border-white/10 p-6 rounded-2xl backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+                        <h3 className="text-xl font-semibold mb-6 text-gray-200">Monthly Trends</h3>
+                        <div className="h-[300px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={monthlyData}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                                    <XAxis dataKey="name" stroke="#888" tickLine={false} />
+                                    <YAxis stroke="#888" tickLine={false} axisLine={false} />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: 'rgba(10, 10, 15, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff', backdropFilter: 'blur(12px)' }}
+                                    />
+                                    <Line type="monotone" dataKey="waste" stroke="#8B5CF6" strokeWidth={3} dot={{ r: 4, fill: '#8B5CF6' }} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
-                </motion.div>
-
-                <motion.div variants={itemVariants} className="glass-panel p-6 rounded-2xl hover:shadow-xl transition-all duration-300">
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                        <span className="w-2 h-6 rounded bg-yellow-500"></span> Recent Alerts
-                    </h2>
-                    <div className="space-y-4">
-                        {[
-                            { id: 1, title: 'Bin #402 Full', time: '10 mins ago', type: 'critical' },
-                            { id: 2, title: 'Truck #12 Delayed', time: '1 hour ago', type: 'warning' },
-                            { id: 3, title: 'High Gas Level: Bin #105', time: '2 hours ago', type: 'critical' },
-                            { id: 4, title: 'User Report: Fly Dumping', time: '5 hours ago', type: 'warning' },
-                        ].map(alert => (
-                            <div key={alert.id} className="flex justify-between items-start border-b border-gray-100 dark:border-gray-700 pb-3 last:border-0 last:pb-0">
-                                <div>
-                                    <h4 className={`font-medium text-sm ${alert.type === 'critical' ? 'text-red-600 dark:text-red-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
-                                        {alert.title}
-                                    </h4>
-                                    <span className="text-xs text-gray-500 dark:text-gray-400">{alert.time}</span>
-                                </div>
-                                <button className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600">
-                                    Resolve
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                    <button className="w-full mt-6 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 transition-colors">
-                        View All Alerts &rarr;
-                    </button>
-                </motion.div>
-            </motion.div>
-        </AnimatedPage>
+                </div>
+            )}
+        </div>
     );
 }

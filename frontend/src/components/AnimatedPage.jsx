@@ -3,22 +3,24 @@ import { motion } from 'framer-motion';
 const pageVariants = {
     initial: {
         opacity: 0,
-        x: -20, // Level 1 subtle slide
+        y: 40,
+        scale: 0.98
     },
     in: {
         opacity: 1,
-        x: 0,
+        y: 0,
+        scale: 1
     },
     out: {
         opacity: 0,
-        x: 20, // Level 1 subtle slide
+        y: -40,
+        scale: 0.98
     },
 };
 
 const pageTransition = {
-    type: 'tween',
-    ease: "circOut",
-    duration: 0.4
+    duration: 0.8,
+    ease: [0.16, 1, 0.3, 1]
 };
 
 export default function AnimatedPage({ children, className = "" }) {

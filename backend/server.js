@@ -20,6 +20,10 @@ app.use("/api/waste", require("./routes/wasteRoutes"));
 app.use("/api/analytics", require("./routes/analyticsRoutes"));
 app.use("/api/centers", require("./routes/centerRoutes"));
 app.use("/api/ai", require("./routes/aiRoutes"));
+app.use("/api/bins", require("./routes/binRoutes"));
+app.use("/api/pickups", require("./routes/pickupRoutes"));
+app.use("/api/alerts", require("./routes/alertRoutes"));
+app.use("/api/notifications", require("./routes/notificationRoutes"));
 
 app.listen(process.env.PORT, () =>
     console.log(`Server running on port ${process.env.PORT}`)

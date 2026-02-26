@@ -2,17 +2,29 @@ const express = require("express");
 const router = express.Router();
 const Bin = require("../models/Bin");
 
-// POST from NodeMCU
-router.post("/", async (req, res) => {
-    const data = new Bin(req.body);
-    await data.save();
-    res.json({ message: "Data saved" });
+// update bin (hardware)
+router.post("/update", async (req, res) => {
+    const { location, fillLevel, gasLevel, temperature } = req.body;
+
+    let status = "Normal";
+
+    if (fillLevel > 80) status = "Full";
+    if (gasLevel > 500) status = "Gas Alert";
+    if (temperature > 40) status = "Fire Risk";
+
+    const bin = await Bin.findOneAndUpdate(
+        { location },
+        { fillLevel, gasLevel, temperature, status, updatedAt: new Date() },
+        { new: true, upsert: true }
+    );
+
+    res.json(bin);
 });
 
-// GET latest data
+// get bins
 router.get("/", async (req, res) => {
-    const data = await Bin.find().sort({ createdAt: -1 }).limit(1);
-    res.json(data[0]);
+    const bins = await Bin.find();
+    res.json(bins);
 });
 
 module.exports = router;

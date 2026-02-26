@@ -1,47 +1,36 @@
-
-import { AlertTriangle, Bell, Info, ShieldAlert } from 'lucide-react';
+import { AlertTriangle, Bell, Info, ShieldAlert, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import AnimatedPage from '../../components/AnimatedPage';
 
-const alerts = [
-    {
-        id: 1,
-        type: 'critical',
-        title: 'Bin Full Alert',
-        message: 'Your neighborhood Smart Bin #402 is currently full. Please use Bin #405 until the pickup is complete.',
-        time: '10 mins ago',
-        icon: AlertTriangle,
-        color: 'red'
-    },
-    {
-        id: 2,
-        type: 'warning',
-        title: 'Upcoming Pickup Delay',
-        message: 'Due to heavy rain, the scheduled organic waste pickup is delayed by 2 hours today.',
-        time: '2 hours ago',
-        icon: ShieldAlert,
-        color: 'yellow'
-    },
-    {
-        id: 3,
-        type: 'info',
-        title: 'New Eco Challenge',
-        message: 'A new community challenge has started! Reduce plastic usage by 10% this week to earn 50 Eco Points.',
-        time: '1 day ago',
-        icon: Bell,
-        color: 'blue'
-    },
-    {
-        id: 4,
-        type: 'success',
-        title: 'Pickup Completed',
-        message: 'Your requested E-Waste pickup was successfully completed. Thank you for recycling!',
-        time: '3 days ago',
-        icon: Info,
-        color: 'green'
-    }
-];
-
 export default function () {
+    const [alerts, setAlerts] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchAlerts = async () => {
+            try {
+                const res = await axios.get('http://localhost:5000/api/alerts');
+                setAlerts(res.data);
+            } catch (err) {
+                console.error("Failed to fetch alerts:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchAlerts();
+    }, []);
+
+    const getIcon = (type) => {
+        switch (type) {
+            case 'critical': return AlertTriangle;
+            case 'warning': return ShieldAlert;
+            case 'success': return Info;
+            default: return Bell;
+        }
+    };
+
     return (
         <AnimatedPage>
             <div className="max-w-4xl mx-auto space-y-6">
@@ -60,42 +49,56 @@ export default function () {
                 </div>
 
                 <div className="space-y-4">
-                    {alerts.map((alert) => {
-                        const Icon = alert.icon;
-                        const colorStyles = {
-                            red: 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400',
-                            yellow: 'bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-900/50 text-yellow-600 dark:text-yellow-400',
-                            blue: 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-900/50 text-blue-600 dark:text-blue-400',
-                            green: 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-900/50 text-green-600 dark:text-green-400'
-                        };
+                    {loading ? (
+                        <div className="flex justify-center items-center py-12">
+                            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                        </div>
+                    ) : alerts.length === 0 ? (
+                        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+                            <Bell className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-white">No alerts yet</h3>
+                            <p className="text-gray-500 dark:text-gray-400">You're all caught up!</p>
+                        </div>
+                    ) : (
+                        alerts.map((alert) => {
+                            const Icon = getIcon(alert.type);
+                            const colorStyles = {
+                                red: 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400',
+                                yellow: 'bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-900/50 text-yellow-600 dark:text-yellow-400',
+                                blue: 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-900/50 text-blue-600 dark:text-blue-400',
+                                green: 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-900/50 text-green-600 dark:text-green-400'
+                            };
 
-                        return (
-                            <div
-                                key={alert.id}
-                                className={`flex gap-4 p-5 rounded-2xl border ${alert.type === 'critical' ? 'border-red-200 dark:border-red-900 bg-white dark:bg-gray-800 shadow-sm' : 'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm'
-                                    } transition-all hover:shadow-md cursor-pointer`}
-                            >
-                                <div className={`p-3 rounded-full h-fit ${colorStyles[alert.color]}`}>
-                                    <Icon className="w-6 h-6" />
-                                </div>
+                            const formattedDate = new Date(alert.date).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-                                <div className="flex-1">
-                                    <div className="flex justify-between items-start">
-                                        <h3 className="font-semibold text-gray-900 dark:text-white text-lg">{alert.title}</h3>
-                                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">{alert.time}</span>
+                            return (
+                                <div
+                                    key={alert._id}
+                                    className={`flex gap-4 p-5 rounded-2xl border ${alert.type === 'critical' ? 'border-red-200 dark:border-red-900 bg-white dark:bg-gray-800 shadow-sm' : 'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm'
+                                        } transition-all hover:shadow-md cursor-pointer`}
+                                >
+                                    <div className={`p-3 rounded-full h-fit flex-shrink-0 ${colorStyles[alert.color] || colorStyles.blue}`}>
+                                        <Icon className="w-6 h-6" />
                                     </div>
-                                    <p className="text-gray-600 dark:text-gray-300 mt-1 leading-relaxed">
-                                        {alert.message}
-                                    </p>
-                                    {alert.type === 'critical' && (
-                                        <button className="mt-3 text-sm font-bold text-red-600 dark:text-red-400 hover:underline">
-                                            View Nearest Bins
-                                        </button>
-                                    )}
+
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex justify-between items-start">
+                                            <h3 className="font-semibold text-gray-900 dark:text-white text-lg pr-4">{alert.title}</h3>
+                                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap pt-1 flex-shrink-0">{formattedDate}</span>
+                                        </div>
+                                        <p className="text-gray-600 dark:text-gray-300 mt-1 leading-relaxed">
+                                            {alert.message}
+                                        </p>
+                                        {alert.type === 'critical' && (
+                                            <button className="mt-3 text-sm font-bold text-red-600 dark:text-red-400 hover:underline">
+                                                View Nearest Bins
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })
+                    )}
                 </div>
             </div>
         </AnimatedPage>

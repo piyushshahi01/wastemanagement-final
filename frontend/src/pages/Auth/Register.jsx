@@ -10,6 +10,7 @@ export default function Register() {
         password: '',
         role: 'user',
         passkey: '',
+        vehicleNumber: '',
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -34,10 +35,14 @@ export default function Register() {
 
             // Save token and navigate
             localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data));
+            if (data.user) {
+                localStorage.setItem('user', JSON.stringify(data.user));
+            }
 
-            if (data.role === 'admin') {
+            if (data.user?.role === 'admin' || formData.role === 'admin') {
                 navigate('/admin/dashboard');
+            } else if (data.user?.role === 'collector' || formData.role === 'collector') {
+                navigate('/collector/dashboard');
             } else {
                 navigate('/user/dashboard');
             }
@@ -76,25 +81,38 @@ export default function Register() {
                 <div className="flex gap-4 mb-6">
                     <button
                         type="button"
-                        className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 border transition-all ${formData.role === 'user'
+                        className={`flex-1 py-2 rounded-xl flex flex-col items-center justify-center gap-1 border transition-all ${formData.role === 'user'
                             ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
                             : 'bg-black/30 border-white/10 text-gray-400 hover:bg-white/5'
                             }`}
-                        onClick={() => setFormData({ ...formData, role: 'user', passkey: '' })}
+                        onClick={() => setFormData({ ...formData, role: 'user', passkey: '', vehicleNumber: '' })}
                     >
-                        <User className="w-4 h-4" />
-                        Resident
+                        <User className="w-5 h-5" />
+                        <span className="text-xs font-medium">Resident</span>
                     </button>
                     <button
                         type="button"
-                        className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 border transition-all ${formData.role === 'admin'
+                        className={`flex-1 py-2 rounded-xl flex flex-col items-center justify-center gap-1 border transition-all ${formData.role === 'collector'
+                            ? 'bg-blue-500/20 border-blue-500 text-blue-400'
+                            : 'bg-black/30 border-white/10 text-gray-400 hover:bg-white/5'
+                            }`}
+                        onClick={() => setFormData({ ...formData, role: 'collector' })}
+                    >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                        <span className="text-xs font-medium">Driver</span>
+                    </button>
+                    <button
+                        type="button"
+                        className={`flex-1 py-2 rounded-xl flex flex-col items-center justify-center gap-1 border transition-all ${formData.role === 'admin'
                             ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400'
                             : 'bg-black/30 border-white/10 text-gray-400 hover:bg-white/5'
                             }`}
-                        onClick={() => setFormData({ ...formData, role: 'admin' })}
+                        onClick={() => setFormData({ ...formData, role: 'admin', vehicleNumber: '' })}
                     >
-                        <ShieldCheck className="w-4 h-4" />
-                        Admin
+                        <ShieldCheck className="w-5 h-5" />
+                        <span className="text-xs font-medium">Admin</span>
                     </button>
                 </div>
 
@@ -158,12 +176,44 @@ export default function Register() {
                         </div>
                     )}
 
+                    {/* Conditional Collector Fields */}
+                    {formData.role === 'collector' && (
+                        <div className="animate-in fade-in slide-in-from-top-2 duration-300 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-blue-400 mb-1">
+                                    Driver Passkey (Required)
+                                </label>
+                                <input
+                                    type="password"
+                                    required
+                                    value={formData.passkey}
+                                    onChange={(e) => setFormData({ ...formData, passkey: e.target.value })}
+                                    className="w-full bg-blue-950/30 border border-blue-500/50 rounded-xl px-4 py-3 text-white placeholder-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                                    placeholder="Enter driver authorization key"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-blue-400 mb-1">
+                                    Vehicle Number Plate
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={formData.vehicleNumber}
+                                    onChange={(e) => setFormData({ ...formData, vehicleNumber: e.target.value.toUpperCase() })}
+                                    className="w-full bg-blue-950/30 border border-blue-500/50 rounded-xl px-4 py-3 text-white placeholder-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all uppercase"
+                                    placeholder="e.g. DL 1C AA 1111"
+                                />
+                            </div>
+                        </div>
+                    )}
+
                     <button
                         type="submit"
                         disabled={loading}
-                        className={`w-full font-medium py-3 rounded-xl hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all flex items-center justify-center gap-2 mt-6 disabled:opacity-70 ${formData.role === 'admin'
-                            ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white'
-                            : 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-white'
+                        className={`w-full font-medium py-3 rounded-xl hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all flex items-center justify-center gap-2 mt-6 disabled:opacity-70 ${formData.role === 'admin' ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white' :
+                                formData.role === 'collector' ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white' :
+                                    'bg-gradient-to-r from-emerald-500 to-cyan-500 text-white'
                             }`}
                     >
                         {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create Account'}

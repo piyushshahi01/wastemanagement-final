@@ -1,19 +1,57 @@
-import { AlertTriangle, Clock, CheckCircle, Search, Filter } from 'lucide-react';
-import { useState } from 'react';
+import { AlertTriangle, Clock, CheckCircle, Search, Filter, Plus, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import AnimatedPage from '../../components/AnimatedPage';
 
-const alertData = [
-    { id: 'ALT-01', location: 'Bin #402, Downtown', issue: 'Bin Overflow', priority: 'High', status: 'Pending', time: '10 mins ago' },
-    { id: 'ALT-02', location: 'Truck #12', issue: 'Engine Trouble', priority: 'Critical', status: 'Resolved', time: '1 hr ago' },
-    { id: 'ALT-03', location: 'Bin #105, Central Park', issue: 'Toxic Gas Detected', priority: 'Critical', status: 'In Progress', time: '2 hrs ago' },
-    { id: 'ALT-04', location: 'Sector 4', issue: 'Missed Pickup Report', priority: 'Medium', status: 'Pending', time: '5 hrs ago' },
-];
-
 export default function AdminAlerts() {
-    const [alerts, setAlerts] = useState(alertData);
+    const [alerts, setAlerts] = useState([]);
+    const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+    const [newAlert, setNewAlert] = useState({ title: '', message: '', type: 'info', color: 'blue' });
+
+    useEffect(() => {
+        const fetchAlerts = () => {
+            fetch("http://localhost:5000/api/bins")
+                .then(res => res.json())
+                .then(data => {
+                    const filtered = data
+                        .filter(bin => bin.status !== "Normal")
+                        // Map the bin data to match the UI shape expected below
+                        .map(bin => ({
+                            id: bin.id || bin._id,
+                            location: bin.location,
+                            issue: bin.status,
+                            priority: bin.status === 'Fire Risk' ? 'Critical' : bin.status === 'Gas Alert' ? 'High' : 'Medium',
+                            status: 'Pending',
+                            time: 'Just now'
+                        }));
+                    setAlerts(filtered);
+                })
+                .catch(err => console.error(err));
+        };
+
+        fetchAlerts();
+        const interval = setInterval(fetchAlerts, 5000);
+        return () => clearInterval(interval);
+    }, []);
 
     const resolveAlert = (id) => {
         setAlerts(alerts.map(a => a.id === id ? { ...a, status: 'Resolved' } : a));
+    };
+
+    const handlePublish = async (e) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem('token');
+            await axios.post('http://localhost:5000/api/alerts', newAlert, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setIsPublishModalOpen(false);
+            setNewAlert({ title: '', message: '', type: 'info', color: 'blue' });
+            alert("Alert published successfully to all users!");
+        } catch (err) {
+            console.error(err);
+            alert("Failed to publish alert");
+        }
     };
 
     return (
@@ -35,10 +73,19 @@ export default function AdminAlerts() {
                             className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
                         />
                     </div>
-                    <button className="flex items-center gap-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <Filter className="w-5 h-5" />
-                        Filter
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button className="flex items-center gap-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <Filter className="w-5 h-5" />
+                            Filter
+                        </button>
+                        <button
+                            onClick={() => setIsPublishModalOpen(true)}
+                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
+                        >
+                            <Plus className="w-5 h-5" />
+                            Publish Alert
+                        </button>
+                    </div>
                 </div>
 
                 <div className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -86,6 +133,75 @@ export default function AdminAlerts() {
                     ))}
                 </div>
             </div>
+
+            {/* Publish Alert Modal */}
+            {isPublishModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-gray-100 dark:border-gray-700">
+                        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
+                            <h3 className="font-bold text-lg text-gray-900 dark:text-white">Publish New Alert</h3>
+                            <button onClick={() => setIsPublishModalOpen(false)} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <form onSubmit={handlePublish} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alert Title</label>
+                                <input
+                                    type="text" required
+                                    value={newAlert.title}
+                                    onChange={e => setNewAlert({ ...newAlert, title: e.target.value })}
+                                    className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 dark:text-white"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Message</label>
+                                <textarea required rows="3"
+                                    value={newAlert.message}
+                                    onChange={e => setNewAlert({ ...newAlert, message: e.target.value })}
+                                    className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 dark:text-white resize-none"
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+                                    <select
+                                        value={newAlert.type}
+                                        onChange={e => setNewAlert({ ...newAlert, type: e.target.value })}
+                                        className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 dark:text-white"
+                                    >
+                                        <option value="info">Info</option>
+                                        <option value="warning">Warning</option>
+                                        <option value="critical">Critical</option>
+                                        <option value="success">Success</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color Theme</label>
+                                    <select
+                                        value={newAlert.color}
+                                        onChange={e => setNewAlert({ ...newAlert, color: e.target.value })}
+                                        className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 dark:text-white"
+                                    >
+                                        <option value="blue">Blue</option>
+                                        <option value="yellow">Yellow</option>
+                                        <option value="red">Red</option>
+                                        <option value="green">Green</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="pt-4 flex justify-end gap-3">
+                                <button type="button" onClick={() => setIsPublishModalOpen(false)} className="px-4 py-2 text-gray-600 dark:text-gray-400 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                                    Cancel
+                                </button>
+                                <button type="submit" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-sm">
+                                    Publish Alert
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </AnimatedPage>
     );
 }

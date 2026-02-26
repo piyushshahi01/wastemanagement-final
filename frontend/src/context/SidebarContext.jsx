@@ -2,7 +2,7 @@ import { createContext, useContext, useState } from 'react';
 
 const SidebarContext = createContext();
 
-export function SidebarProvider({ children }) {
+export const SidebarProvider = ({ children }) => {
     const [isMobileOpen, setIsMobileOpen] = useState(false);
 
     return (
@@ -10,8 +10,8 @@ export function SidebarProvider({ children }) {
             {children}
         </SidebarContext.Provider>
     );
-}
+};
 
-export function useSidebar() {
+export const useSidebar = () => {
     return useContext(SidebarContext);
-}
+};

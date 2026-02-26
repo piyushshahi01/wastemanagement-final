@@ -1,244 +1,226 @@
-import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import * as THREE from 'three';
-import { Leaf } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Leaf, Navigation, BarChart3, BellRing, ArrowRight } from 'lucide-react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import MagneticButton from '../components/MagneticButton';
+
+const features = [
+    {
+        icon: Navigation,
+        title: "AI Route Optimization",
+        description: "Dynamic geofencing and smart routing algorithms reduce fuel consumption by up to 30% while ensuring zero missed pickups."
+    },
+    {
+        icon: BellRing,
+        title: "Live IoT Monitoring",
+        description: "Smart bin sensors feed real-time capacity and chemical data, alerting fleet managers instantly to prevent hazardous overflows."
+    },
+    {
+        icon: BarChart3,
+        title: "Predictive Analytics",
+        description: "Transform raw city data into actionable insights. Forecast waste generation hotspots before they become a problem."
+    }
+];
 
 export default function Landing() {
-    const mountRef = useRef(null);
     const navigate = useNavigate();
-    const [isExploding, setIsExploding] = useState(false);
+    const { scrollY } = useScroll();
 
-    useEffect(() => {
-        const mount = mountRef.current;
-        if (!mount) return;
+    // Parallax background effect
+    const backgroundY = useTransform(scrollY, [0, 1000], ['0%', '20%']);
+    const opacityDown = useTransform(scrollY, [0, 300], [1, 0]);
 
-        // Scene Setup
-        const scene = new THREE.Scene();
-        // Transparent background so our CSS gradients show through
-        scene.background = null;
-
-        const camera = new THREE.PerspectiveCamera(75, mount.clientWidth / mount.clientHeight, 0.1, 1000);
-        camera.position.z = 30;
-
-        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-        renderer.setSize(mount.clientWidth, mount.clientHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        mount.appendChild(renderer.domElement);
-
-        // Particle Mesh (Digital Twin City Concept)
-        const particleCount = 2000;
-        const geometry = new THREE.BufferGeometry();
-        const positions = new Float32Array(particleCount * 3);
-        const originalPositions = new Float32Array(particleCount * 3);
-        const velocities = new Float32Array(particleCount * 3);
-
-        for (let i = 0; i < particleCount; i++) {
-            // Distribute particles in a wide subtle cylinder/city-like field
-            const x = (Math.random() - 0.5) * 100;
-            const y = (Math.random() - 0.5) * 60;
-            const z = (Math.random() - 0.5) * 50;
-
-            positions[i * 3] = x;
-            positions[i * 3 + 1] = y;
-            positions[i * 3 + 2] = z;
-
-            originalPositions[i * 3] = x;
-            originalPositions[i * 3 + 1] = y;
-            originalPositions[i * 3 + 2] = z;
-
-            velocities[i * 3] = 0;
-            velocities[i * 3 + 1] = 0;
-            velocities[i * 3 + 2] = 0;
-        }
-
-        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-        // Create a circular texture for particles
-        const canvas = document.createElement('canvas');
-        canvas.width = 16; canvas.height = 16;
-        const ctx = canvas.getContext('2d');
-        ctx.beginPath();
-        ctx.arc(8, 8, 8, 0, Math.PI * 2);
-        ctx.fillStyle = '#10B981'; // Tailwind Green-500
-        ctx.fill();
-        const texture = new THREE.CanvasTexture(canvas);
-
-        const material = new THREE.PointsMaterial({
-            size: 0.5,
-            map: texture,
-            transparent: true,
-            opacity: 0.8,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false
-        });
-
-        const particles = new THREE.Points(geometry, material);
-        scene.add(particles);
-
-        // Mouse Tracking
-        let mouseX = 0;
-        let mouseY = 0;
-        let targetX = 0;
-        let targetY = 0;
-
-        const windowHalfX = mount.clientWidth / 2;
-        const windowHalfY = mount.clientHeight / 2;
-
-        const onDocumentMouseMove = (event) => {
-            mouseX = (event.clientX - windowHalfX);
-            mouseY = (event.clientY - windowHalfY);
-        };
-
-        document.addEventListener('mousemove', onDocumentMouseMove);
-
-        // Handle Resize
-        const onWindowResize = () => {
-            camera.aspect = mount.clientWidth / mount.clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(mount.clientWidth, mount.clientHeight);
-        };
-        window.addEventListener('resize', onWindowResize);
-
-        // Animation Loop
-        let animationId;
-        let frameCount = 0;
-
-        const animate = () => {
-            animationId = requestAnimationFrame(animate);
-
-            // Apply explosion physics if triggered
-            if (isExplodingRef.current) {
-                const positions = particles.geometry.attributes.position.array;
-
-                for (let i = 0; i < particleCount; i++) {
-                    const i3 = i * 3;
-
-                    // Initialize explosive velocity once
-                    if (velocities[i3] === 0 && velocities[i3 + 1] === 0) {
-                        const angle = Math.random() * Math.PI * 2;
-                        const speed = 1 + Math.random() * 3;
-                        velocities[i3] = Math.cos(angle) * speed;
-                        velocities[i3 + 1] = Math.sin(angle) * speed;
-                        velocities[i3 + 2] = (Math.random() - 0.5) * speed * 5;
-                    }
-
-                    positions[i3] += velocities[i3];
-                    positions[i3 + 1] += velocities[i3 + 1];
-                    positions[i3 + 2] += velocities[i3 + 2];
-                }
-
-                material.opacity -= 0.02; // Fade out during explosion
-                particles.geometry.attributes.position.needsUpdate = true;
-            } else {
-                // Normal Gravity/Drift State
-                targetX = mouseX * 0.05;
-                targetY = mouseY * 0.05;
-
-                // Subtle mesh rotation based on mouse
-                particles.rotation.y += 0.002;
-                particles.rotation.x += (targetY * 0.0002 - particles.rotation.x) * 0.05;
-                particles.rotation.y += (targetX * 0.0002 - particles.rotation.y) * 0.05;
-
-                // Make particles gently drift towards cursor
-                const positions = particles.geometry.attributes.position.array;
-                frameCount += 0.01;
-
-                for (let i = 0; i < particleCount; i++) {
-                    const i3 = i * 3;
-
-                    // Wave motion
-                    const wave = Math.sin(frameCount + i) * 0.02;
-
-                    // Pull towards mouse (gravity effect)
-                    const dx = targetX * 0.2 - positions[i3];
-                    const dy = -targetY * 0.2 - positions[i3 + 1];
-
-                    // Return to original slowly + gravity + wave
-                    positions[i3] += (originalPositions[i3] - positions[i3]) * 0.01 + dx * 0.001;
-                    positions[i3 + 1] += (originalPositions[i3 + 1] - positions[i3 + 1]) * 0.01 + dy * 0.001 + wave;
-                }
-                particles.geometry.attributes.position.needsUpdate = true;
-            }
-
-            renderer.render(scene, camera);
-        };
-
-        animate();
-
-        return () => {
-            mount.removeChild(renderer.domElement);
-            document.removeEventListener('mousemove', onDocumentMouseMove);
-            window.removeEventListener('resize', onWindowResize);
-            cancelAnimationFrame(animationId);
-            geometry.dispose();
-            material.dispose();
-            texture.dispose();
-        };
-    }, []);
-
-    // We need a ref for the explosion flag to be accessible instantly inside the requestAnimationFrame loop
-    const isExplodingRef = useRef(false);
+    // Handle seamless routing transitions
+    const handleNavigation = (path) => {
+        navigate(path);
+    };
 
     return (
-        <div className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-gray-50 to-gray-200 dark:from-[#05000a] dark:to-[#0a0f18]">
-            {/* The ThreeJS Canvas Container */}
-            <div ref={mountRef} className="absolute inset-0 z-0"></div>
+        <div className="relative min-h-screen bg-[#030305] text-white selection:bg-emerald-500/30 overflow-x-hidden pt-20 w-full max-w-full">
+            {/* Fluid Animated Background Gradients */}
+            <motion.div
+                style={{ y: backgroundY }}
+                className="absolute inset-0 pointer-events-none z-0 overflow-hidden"
+            >
+                <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/10 blur-[120px] rounded-full mix-blend-screen" />
+                <div className="absolute bottom-[20%] right-[-10%] w-[60%] h-[60%] bg-cyan-500/10 blur-[150px] rounded-full mix-blend-screen" />
+                <div className="absolute top-[40%] left-[20%] w-[30%] h-[30%] bg-blue-500/10 blur-[100px] rounded-full mix-blend-screen" />
+            </motion.div>
 
-            {/* UI Overlay */}
-            <div className={`relative z-10 w-full h-full flex flex-col items-center justify-center pointer-events-none transition-opacity duration-500 ${isExploding ? 'opacity-0' : 'opacity-100'}`}>
+            {/* Navbar (Minimal) */}
+            <nav className="fixed top-0 left-0 right-0 p-6 z-50 flex justify-between items-center backdrop-blur-md bg-black/10 border-b border-white/5">
+                <div className="flex items-center gap-3">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                        className="w-10 h-10 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(249,115,22,0.3)]"
+                    >
+                        <Leaf className="w-5 h-5 text-white" />
+                    </motion.div>
+                    <motion.span
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 1, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                        className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400"
+                    >
+                        WasteSync
+                    </motion.span>
+                </div>
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex gap-4"
+                >
+                    <MagneticButton onClick={() => handleNavigation('/login')} className="px-5 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors">
+                        Sign In
+                    </MagneticButton>
+                    <MagneticButton onClick={() => handleNavigation('/register')} className="px-5 py-2 text-sm font-medium bg-white/10 hover:bg-white/20 border border-white/10 rounded-full transition-all">
+                        Get Started
+                    </MagneticButton>
+                </motion.div>
+            </nav>
+
+            {/* Hero Section */}
+            <main className="relative z-10 flex flex-col items-center justify-center min-h-[90vh] px-4">
+                <motion.div
+                    initial={{ scale: 0.8, opacity: 0, y: 40 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="w-24 h-24 bg-gradient-to-br from-orange-400/20 to-red-500/20 backdrop-blur-3xl rounded-3xl mb-8 flex items-center justify-center border border-white/10 shadow-[0_0_50px_rgba(249,115,22,0.2)]"
+                >
+                    <motion.div
+                        animate={{ y: [0, -10, 0] }}
+                        transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                    >
+                        <Leaf className="w-12 h-12 text-orange-400" />
+                    </motion.div>
+                </motion.div>
+
+                <div className="text-center max-w-4xl mx-auto space-y-6">
+                    <motion.h1
+                        initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ duration: 1.2, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                        className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight"
+                    >
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400">
+                            Intelligence
+                        </span>
+                        <br />
+                        <span className="text-white">Meets Ecology.</span>
+                    </motion.h1>
+
+                    <motion.p
+                        initial={{ opacity: 0, y: 40 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="text-lg md:text-2xl text-gray-400 max-w-2xl mx-auto font-light leading-relaxed"
+                    >
+                        The ultimate platform for urban waste management. Optimize fleets, track smart bins in real-time, and build a greener tomorrow.
+                    </motion.p>
+                </div>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 1.2, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex flex-col sm:flex-row gap-6 mt-12"
+                >
+                    <MagneticButton
+                        onClick={() => handleNavigation('/login')}
+                        className="group relative px-8 py-4 bg-orange-500 text-black text-lg font-bold rounded-2xl overflow-hidden shadow-[0_0_30px_rgba(249,115,22,0.4)] hover:shadow-[0_0_50px_rgba(249,115,22,0.6)] transition-all"
+                    >
+                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+                        <span className="relative flex items-center gap-2">
+                            Enter Platform <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </span>
+                    </MagneticButton>
+                    <MagneticButton
+                        onClick={() => handleNavigation('/register')}
+                        className="group flex items-center gap-2 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-lg font-medium rounded-2xl transition-all"
+                    >
+                        Create Account
+                    </MagneticButton>
+                </motion.div>
+
+                {/* Scroll Indicator */}
+                <motion.div
+                    style={{ opacity: opacityDown }}
+                    className="absolute bottom-10 flex flex-col items-center gap-3 text-gray-500"
+                >
+                    <span className="text-xs tracking-widest uppercase font-semibold">Discover</span>
+                    <motion.div
+                        animate={{ y: [0, 8, 0] }}
+                        transition={{ repeat: Infinity, duration: 1.5 }}
+                        className="w-1 h-8 rounded-full bg-gradient-to-b from-gray-500 to-transparent"
+                    />
+                </motion.div>
+            </main>
+
+            {/* Features Section */}
+            <section className="relative z-10 py-32 px-4 max-w-7xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {features.map((feature, idx) => (
+                        <motion.div
+                            key={idx}
+                            initial={{ opacity: 0, y: 60, scale: 0.95 }}
+                            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                            viewport={{ once: true, margin: "-50px" }}
+                            transition={{ duration: 1.2, delay: idx * 0.15, ease: [0.16, 1, 0.3, 1] }}
+                            className="bg-white/5 border border-white/10 backdrop-blur-xl p-8 rounded-[32px] hover:bg-white/10 transition-colors group cursor-default"
+                        >
+                            <div className="w-14 h-14 bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl flex items-center justify-center mb-6 shadow-xl group-hover:border-orange-500/50 transition-colors">
+                                <feature.icon className="w-6 h-6 text-orange-400" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-4">{feature.title}</h3>
+                            <p className="text-gray-400 leading-relaxed font-light">{feature.description}</p>
+                        </motion.div>
+                    ))}
+                </div>
+            </section>
+
+            {/* About Us Section */}
+            <section className="relative z-10 py-20 px-4 max-w-4xl mx-auto text-center" id="about">
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1, delay: 0.5 }}
-                    className="flex flex-col items-center"
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                    className="bg-white/5 border border-white/10 backdrop-blur-xl p-10 md:p-14 rounded-[40px] shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden"
                 >
-                    <div className="bg-white/10 dark:bg-black/20 backdrop-blur-md p-6 rounded-full shadow-2xl mb-8 border border-white/20">
-                        <Leaf className="w-16 h-16 text-green-500" />
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-32 bg-orange-500/20 blur-[80px] rounded-full pointer-events-none" />
+
+                    <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400 mb-8">
+                        About the Creator
+                    </h2>
+
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-red-500 mx-auto flex items-center justify-center text-4xl font-black text-black shadow-[0_0_30px_rgba(249,115,22,0.3)] mb-6">
+                        P
                     </div>
 
-                    <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-400 dark:from-green-400 dark:to-emerald-200 tracking-tighter mb-4 drop-shadow-sm text-center">
-                        WasteSync AI
-                    </h1>
+                    <h3 className="text-2xl font-bold text-white mb-3">Piyush</h3>
+                    <p className="text-orange-400 text-sm font-semibold tracking-widest uppercase mb-6">Founder & Lead Engineer</p>
 
-                    <p className="text-xl md:text-2xl text-gray-700 dark:text-gray-300 font-medium max-w-2xl text-center mb-12">
-                        The ultimate intelligent platform for urban waste management. Optimize, track, and recycle smarter.
+                    <p className="text-gray-300 text-lg leading-relaxed font-light mb-8 max-w-2xl mx-auto">
+                        Passionate developer and innovator dedicated to building intelligent solutions for a sustainable future. WasteSync AI was developed to bridge the gap between cutting-edge technology and ecological responsibility. Modern problems require modern, data-driven solutions.
                     </p>
 
-                    <div className="flex gap-4 pointer-events-auto">
-                        <button
-                            onClick={() => {
-                                setIsExploding(true);
-                                isExplodingRef.current = true;
-                                setTimeout(() => navigate('/login'), 1200);
-                            }}
-                            className="group relative px-8 py-4 bg-green-500 text-white text-xl font-bold rounded-full overflow-hidden shadow-[0_0_40px_rgba(34,197,94,0.4)] hover:shadow-[0_0_60px_rgba(34,197,94,0.6)] transition-all active:scale-95"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <span className="relative flex items-center gap-3">
-                                Log In
-                                <motion.span animate={{ x: [0, 5, 0] }} transition={{ repeat: Infinity, duration: 1.5 }}>
-                                    →
-                                </motion.span>
-                            </span>
+                    <div className="flex justify-center gap-4 pointer-events-auto">
+                        <button className="px-6 py-2.5 bg-black/40 hover:bg-black/80 border border-white/10 text-white rounded-full transition-all hover:border-orange-500/50 text-sm font-medium hover:shadow-[0_0_15px_rgba(249,115,22,0.2)]">
+                            GitHub
                         </button>
-
-                        <button
-                            onClick={() => {
-                                setIsExploding(true);
-                                isExplodingRef.current = true;
-                                setTimeout(() => navigate('/register'), 1200);
-                            }}
-                            className="group relative px-8 py-4 bg-transparent border-2 border-green-500 text-green-500 hover:text-white dark:text-green-400 text-xl font-bold rounded-full overflow-hidden hover:shadow-[0_0_40px_rgba(34,197,94,0.2)] transition-all active:scale-95"
-                        >
-                            <div className="absolute inset-0 bg-green-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <span className="relative flex items-center gap-3">
-                                Create Account
-                            </span>
+                        <button className="px-6 py-2.5 bg-black/40 hover:bg-black/80 border border-white/10 text-white rounded-full transition-all hover:border-red-500/50 text-sm font-medium hover:shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                            LinkedIn
                         </button>
                     </div>
                 </motion.div>
-            </div>
-        </div>
+            </section>
+
+            {/* Micro Footer */}
+            <footer className="relative z-10 border-t border-white/10 py-8 text-center text-sm text-gray-600">
+                <p>© 2026 WasteSync AI. A project for a cleaner planet.</p>
+            </footer>
+        </div >
     );
 }

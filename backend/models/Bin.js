@@ -1,10 +1,12 @@
 const mongoose = require("mongoose");
 
 const binSchema = new mongoose.Schema({
-    level: Number,
-    gas: Number,
+    location: String,
+    fillLevel: Number,
+    gasLevel: Number,
     temperature: Number,
-    createdAt: { type: Date, default: Date.now }
+    status: String,
+    updatedAt: { type: Date, default: Date.now }
 });
 
 module.exports = mongoose.model("Bin", binSchema);
